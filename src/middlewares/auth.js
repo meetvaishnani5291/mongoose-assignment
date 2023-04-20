@@ -5,16 +5,20 @@ const auth = async (req, res, next) => {
   try {
     const token = req.header("authorization").replace("Bearer ", "");
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findOne({ _id: decoded.id });
+    const user = await User.findOne(
+      { _id: decoded.id },
+      {
+        password: 0,
+        __v: 0,
+      }
+    );
 
-    if (!user) {
-      return res.status(401).json({ error: "Please Authenticate!" });
-    }
+    if (!user) throw "User not found";
 
     req.user = user;
     next();
   } catch (err) {
-    next(err);
+    next(new Error("Please Authenticate!"));
   }
 };
 

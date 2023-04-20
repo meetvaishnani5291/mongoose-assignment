@@ -27,3 +27,18 @@ const bcrypt = require("bcryptjs");
       console.log(await Comment.insertMany(comments));
     });
 })();
+// const fetchPostById = async (req, res, next) => {
+//   try {
+//     for (let j = 1; j <= 10; j++) {
+//       for (let i = 1; i <= 50; i++) {
+//         const result = await Comment.updateOne({ userId: null }, [
+//           { $set: { userId: Math.floor(Math.random() * 10) + 1 } },
+//         ]);
+//       }
+//     }
+//     // const result = await Comment.updateMany({}, [{ $unset: "userId" }]);
+//     res.json(result);
+//   } catch (err) {
+//     next(err);
+//   }
+// };

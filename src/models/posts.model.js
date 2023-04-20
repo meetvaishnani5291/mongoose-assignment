@@ -4,7 +4,7 @@ const postSchema = mongoose.Schema({
   _id: {
     type: Number,
     required: true,
-    unique: true,
+    // unique: true,
   },
   userId: {
     type: Number,
@@ -19,6 +19,16 @@ const postSchema = mongoose.Schema({
     required: true,
   },
 });
+
+postSchema.index(
+  { body: "text", title: "text" },
+  {
+    weight: {
+      title: 10,
+      body: 5,
+    },
+  }
+);
 
 const Post = mongoose.model("Post", postSchema);
 

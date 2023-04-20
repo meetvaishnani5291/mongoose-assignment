@@ -34,71 +34,9 @@ const userSchema = mongoose.Schema({
       if (value.toLowerCase().includes("password"))
         throw new Error("password can not contain word password!");
     },
-    address: {
-      street: {
-        type: String,
-        required: true,
-      },
-      suite: {
-        type: String,
-        required: true,
-      },
-      city: {
-        type: String,
-        required: true,
-      },
-      zipcode: {
-        type: Number,
-        required: true,
-      },
-      geo: {
-        lat: {
-          type: Number,
-          required: true,
-        },
-        lng: {
-          type: Number,
-          required: true,
-        },
-      },
-    },
-    phone: {
-      type: String,
-      required: true,
-    },
-    website: {
-      type: String,
-      required: true,
-    },
-    company: {
-      name: {
-        type: String,
-        required: true,
-      },
-      catchPhrase: {
-        type: String,
-        required: true,
-      },
-      bs: {
-        type: String,
-        required: true,
-      },
-    },
   },
 });
 
-//hiding private data
-userSchema.methods.toJSON = function () {
-  const user = this;
-  let userObject = user.toObject();
-
-  delete userObject.password;
-  delete userObject.tokens;
-
-  return userObject;
-};
-
-//generating token
 userSchema.methods.generateAuthToken = async function () {
   const user = this;
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
@@ -106,7 +44,6 @@ userSchema.methods.generateAuthToken = async function () {
   return token;
 };
 
-//encrypt password before saving it into database
 userSchema.pre("save", async function (next) {
   const user = this;
   if (user.isModified("password"))

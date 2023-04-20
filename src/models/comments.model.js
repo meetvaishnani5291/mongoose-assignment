@@ -15,16 +15,6 @@ const commentSchema = mongoose.Schema({
     type: String,
     required: true,
   },
-  email: {
-    type: String,
-    required: true,
-    trim: true,
-    lowercase: true,
-    unique: true,
-    validate: (value) => {
-      if (!validator.isEmail(value)) throw new Error("email is not valid!");
-    },
-  },
 });
 
 const Comment = mongoose.model("Comment", commentSchema);
