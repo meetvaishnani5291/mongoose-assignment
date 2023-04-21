@@ -14,7 +14,6 @@ const auth = async (req, res, next) => {
     );
 
     if (!user) throw "User not found";
-
     req.user = user;
     next();
   } catch (err) {

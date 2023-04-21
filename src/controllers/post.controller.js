@@ -1,5 +1,12 @@
+const Joi = require("joi");
+const { default: mongoose } = require("mongoose");
+
 const Post = require("../models/posts.model");
 const Comment = require("../models/comments.model");
+const {
+  postValidationSchema,
+  commentValidationSchema,
+} = require("../utils/validation");
 
 const fetchAllPosts = async (req, res, next) => {
   try {
@@ -25,12 +32,18 @@ const fetchAllPosts = async (req, res, next) => {
 };
 
 const fetchPostById = async (req, res, next) => {
-  console.log(req.params.id);
   try {
+    const postId = req.params.id;
+    Joi.assert(postId, Joi.string().hex().length(24));
+
+    const pageno = parseInt(req.query.pageno) || 1;
+    const itemsPerPage = parseInt(req.query.itemsPerPage) || 10;
+    const skip = (pageno - 1) * itemsPerPage;
+
     const post = await Post.aggregate([
       {
         $match: {
-          _id: Number(req.params.id),
+          _id: new mongoose.Types.ObjectId(postId),
         },
       },
       {
@@ -52,21 +65,44 @@ const fetchPostById = async (req, res, next) => {
           as: "commentsOnPost",
           pipeline: [
             {
-              $lookup: {
-                from: "users",
-                localField: "userId",
-                foreignField: "_id",
-                as: "commentByUser",
-              },
-            },
-            {
-              $unwind: "$commentByUser",
-            },
-            {
-              $project: {
-                _id: 0,
-                body: 1,
-                commentBy: "$commentByUser.username",
+              $facet: {
+                comments: [
+                  {
+                    $lookup: {
+                      from: "users",
+                      localField: "userId",
+                      foreignField: "_id",
+                      as: "commentByUser",
+                    },
+                  },
+                  {
+                    $unwind: "$commentByUser",
+                  },
+                  {
+                    $skip: skip,
+                  },
+                  {
+                    $limit: itemsPerPage,
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      body: 1,
+                      commentBy: "$commentByUser.username",
+                    },
+                  },
+                ],
+                meta: [
+                  { $count: "total" },
+                  {
+                    $project: {
+                      totalPages: {
+                        $ceil: { $divide: ["$total", itemsPerPage] },
+                      },
+                      currentPage: pageno.toString(),
+                    },
+                  },
+                ],
               },
             },
           ],
@@ -92,8 +128,11 @@ const fetchPostById = async (req, res, next) => {
 
 const searchPost = async (req, res, next) => {
   try {
+    const keyword = req.query.keyword;
+    Joi.assert(keyword, Joi.string().required());
+
     const posts = await Post.aggregate([
-      { $match: { $text: { $search: req.query.keyword } } },
+      { $match: { $text: { $search: keyword } } },
       {
         $addFields: {
           score: { $meta: "textScore" },
@@ -128,13 +167,14 @@ const searchPost = async (req, res, next) => {
     next(err);
   }
 };
-
 const addPost = async (req, res, next) => {
   try {
-    const post = await Post.create({
-      ...req.body,
-      userId: req.user._id,
-    });
+    const newPost = req.body.post;
+    newPost.userId = req.user._id;
+
+    Joi.assert({ ...newPost }, postValidationSchema);
+
+    const post = await Post.create(newPost);
     res.status(201).json({ data: post });
   } catch (err) {
     next(err);
@@ -143,9 +183,12 @@ const addPost = async (req, res, next) => {
 
 const deletePost = async (req, res, next) => {
   try {
+    const postId = req.params.id;
+    Joi.assert(postId, Joi.string().hex().length(24));
+
     const post = await Post.findOne({
       userId: req.user._id,
-      _id: req.params.id,
+      _id: new mongoose.Types.ObjectId(postId),
     });
     if (!post) return res.status(404).json({ error: "post not found!" });
     post.deleteOne();
@@ -158,16 +201,20 @@ const deletePost = async (req, res, next) => {
 const addCommentToPost = async (req, res, next) => {
   try {
     const postId = req.params.id;
-    const post = await Post.findById(postId);
+    Joi.assert(postId, Joi.string().hex().length(24));
+    const post = await Post.findById(new mongoose.Types.ObjectId(postId));
 
     if (!post) {
       return res.status(404).json({ error: "Post not found!" });
     }
-    const comment = await Comment.create({
-      ...req.body,
-      userId: req.user._id,
-      postId,
-    });
+
+    const newComment = req.body.comment;
+    newComment.userId = req.user._id;
+    newComment.posId = post._id;
+    Joi.assert({ ...newComment }, commentValidationSchema);
+
+    const comment = await Comment.create(newComment);
+
     res.status(200).json({ data: comment });
   } catch (err) {
     next(err);

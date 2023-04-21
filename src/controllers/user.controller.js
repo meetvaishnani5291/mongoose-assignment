@@ -1,14 +1,22 @@
 const User = require("../models/users.model");
 const Post = require("../models/posts.model");
 const bcrypt = require("bcryptjs");
+const Joi = require("joi");
+const { userValidationSchema } = require("../utils/validation");
 
 const loginUser = async (req, res, next) => {
   try {
-    const user = await User.findOne({ email: req.body.email });
+    const email = req.body.email;
+    const password = req.body.password;
+
+    Joi.assert(email, Joi.string().email().required());
+    Joi.assert(password, Joi.string().required());
+
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ error: "Invalid Credentials" });
     }
-    const isMatch = await bcrypt.compare(req.body.password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(401).json({ error: "Invalid Credentials" });
@@ -23,7 +31,9 @@ const loginUser = async (req, res, next) => {
 
 const addUser = async (req, res, next) => {
   try {
-    const user = await User.create(req.body);
+    const newUser = req.body.user;
+    Joi.assert({ ...newUser }, userValidationSchema);
+    const user = await User.create(newUser);
     res.status(201).json({ user });
   } catch (err) {
     next(err);
@@ -36,8 +46,10 @@ const getUser = async (req, res, next) => {
 
 const deleteUser = async (req, res, next) => {
   try {
-    await Post.deleteMany({ userId: req.user._id });
-    await User.deleteOne({ _id: req.user._id });
+    const userId = req.user._id;
+    console.log(userId);
+    await Post.deleteMany({ userId });
+    await User.deleteOne({ _id: userId });
     res.status(200).json({ message: "user deleted successfully" });
   } catch (err) {
     next(err);
