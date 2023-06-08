@@ -16,11 +16,11 @@ const loginUser = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({ error: "Invalid Credentials" });
     }
-    const isMatch = await bcrypt.compare(password, user.password);
+    // const isMatch = await bcrypt.compare(password, user.password);
 
-    if (!isMatch) {
-      return res.status(401).json({ error: "Invalid Credentials" });
-    }
+    // if (!isMatch) {
+    //   return res.status(401).json({ error: "Invalid Credentials" });
+    // }
 
     const token = await user.generateAuthToken();
     res.status(200).json({ token });
@@ -31,23 +31,22 @@ const loginUser = async (req, res, next) => {
 
 const addUser = async (req, res, next) => {
   try {
-    const newUser = req.body.user;
+    const newUser = req.body;
     Joi.assert({ ...newUser }, userValidationSchema);
     const user = await User.create(newUser);
-    res.status(201).json({ user });
+    res.status(201).json(user);
   } catch (err) {
     next(err);
   }
 };
 
 const getUser = async (req, res, next) => {
-  res.status(200).json({ data: req.user });
+  res.status(200).json(req.user);
 };
 
 const deleteUser = async (req, res, next) => {
   try {
     const userId = req.user._id;
-    console.log(userId);
     await Post.deleteMany({ userId });
     await User.deleteOne({ _id: userId });
     res.status(200).json({ message: "user deleted successfully" });

@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/users.model");
+const e = require("express");
 
 const auth = async (req, res, next) => {
   try {
@@ -17,7 +18,9 @@ const auth = async (req, res, next) => {
     req.user = user;
     next();
   } catch (err) {
-    next(new Error("Please Authenticate!"));
+    res.status(401).json({
+      message: "Unauthorised ,authetication failed",
+    });
   }
 };
 

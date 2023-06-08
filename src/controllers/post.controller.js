@@ -7,6 +7,7 @@ const {
   postValidationSchema,
   commentValidationSchema,
 } = require("../utils/validation");
+const e = require("express");
 
 const fetchAllPosts = async (req, res, next) => {
   try {
@@ -22,7 +23,7 @@ const fetchAllPosts = async (req, res, next) => {
       return res.status(404).json({ error: "posts not found!" });
 
     res.status(200).json({
-      data: posts,
+      posts: posts,
       currentPage: pageno,
       totalPages: Math.ceil(totalPosts / itemsPerPage),
     });
@@ -105,8 +106,14 @@ const fetchPostById = async (req, res, next) => {
                 ],
               },
             },
+            {
+              $unwind: "$meta",
+            },
           ],
         },
+      },
+      {
+        $unwind: "$commentsOnPost",
       },
       {
         $project: {
@@ -120,8 +127,10 @@ const fetchPostById = async (req, res, next) => {
     ]);
     if (!post) return res.status(404).json({ error: "post not found!" });
 
-    res.status(200).json({ data: post });
+    res.status(200).json(post[0]);
   } catch (err) {
+    if (err instanceof Joi.ValidationError)
+      return res.status(400).json({ message: "please provide valid id" });
     next(err);
   }
 };
@@ -162,21 +171,27 @@ const searchPost = async (req, res, next) => {
         },
       },
     ]);
-    res.status(200).json({ data: posts });
+    res.status(200).json(posts);
   } catch (err) {
+    if (err instanceof Joi.ValidationError)
+      return res
+        .status(400)
+        .json({ message: "keyword is required for serch post" });
     next(err);
   }
 };
 const addPost = async (req, res, next) => {
   try {
-    const newPost = req.body.post;
+    const newPost = req.body;
     newPost.userId = req.user._id;
 
     Joi.assert({ ...newPost }, postValidationSchema);
 
     const post = await Post.create(newPost);
-    res.status(201).json({ data: post });
+    res.status(201).json(post);
   } catch (err) {
+    if (err instanceof Joi.ValidationError)
+      res.status(400).json({ message: err.message });
     next(err);
   }
 };
@@ -194,6 +209,8 @@ const deletePost = async (req, res, next) => {
     post.deleteOne();
     res.status(200).json({ message: "post deleted successfully" });
   } catch (err) {
+    if (err instanceof Joi.ValidationError)
+      return res.status(400).json({ message: "please provide valid id" });
     next(err);
   }
 };
@@ -208,14 +225,14 @@ const addCommentToPost = async (req, res, next) => {
       return res.status(404).json({ error: "Post not found!" });
     }
 
-    const newComment = req.body.comment;
+    const newComment = req.body;
     newComment.userId = req.user._id;
     newComment.posId = post._id;
     Joi.assert({ ...newComment }, commentValidationSchema);
 
     const comment = await Comment.create(newComment);
 
-    res.status(200).json({ data: comment });
+    res.status(200).json(comment);
   } catch (err) {
     next(err);
   }
