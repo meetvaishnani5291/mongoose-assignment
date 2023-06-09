@@ -16,11 +16,11 @@ const loginUser = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({ message: "Invalid Credentials" });
     }
-    // const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password);
 
-    // if (!isMatch) {
-    //   return res.status(401).json({ message: "Invalid Credentials" });
-    // }
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid Credentials" });
+    }
 
     const token = await user.generateAuthToken();
     res.status(200).json({ token });
