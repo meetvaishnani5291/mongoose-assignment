@@ -14,12 +14,12 @@ const auth = async (req, res, next) => {
       }
     );
 
-    if (!user) throw "User not found";
+    if (!user) return res.status(404).json({ message: "user not found" });
     req.user = user;
     next();
   } catch (err) {
     res.status(401).json({
-      message: "Unauthorised ,authetication failed",
+      message: "Unauthorised",
     });
   }
 };

@@ -14,12 +14,12 @@ const loginUser = async (req, res, next) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ error: "Invalid Credentials" });
+      return res.status(401).json({ message: "Invalid Credentials" });
     }
     // const isMatch = await bcrypt.compare(password, user.password);
 
     // if (!isMatch) {
-    //   return res.status(401).json({ error: "Invalid Credentials" });
+    //   return res.status(401).json({ message: "Invalid Credentials" });
     // }
 
     const token = await user.generateAuthToken();
@@ -33,8 +33,16 @@ const addUser = async (req, res, next) => {
   try {
     const newUser = req.body;
     Joi.assert({ ...newUser }, userValidationSchema);
+
+    const userExist = await User.findOne({ email: newUser.email });
+    console.log(userExist);
+    if (userExist)
+      return res
+        .status(400)
+        .json({ message: "user with this email already exist" });
+
     const user = await User.create(newUser);
-    res.status(201).json(user);
+    res.status(200).json(user);
   } catch (err) {
     next(err);
   }
@@ -49,7 +57,7 @@ const deleteUser = async (req, res, next) => {
     const userId = req.user._id;
     await Post.deleteMany({ userId });
     await User.deleteOne({ _id: userId });
-    res.status(200).json({ message: "user deleted successfully" });
+    res.status(200).json({ success: true });
   } catch (err) {
     next(err);
   }

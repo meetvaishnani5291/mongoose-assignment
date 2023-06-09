@@ -33,6 +33,12 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "posts": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Post"
+                      }
+                    },
                     "currentPage": {
                       "type": "number",
                       "example": 1
@@ -40,9 +46,6 @@
                     "totalPages": {
                       "type": "number",
                       "example": 10
-                    },
-                    "post": {
-                      "$ref": "#/components/schemas/Post"
                     }
                   }
                 }
@@ -219,7 +222,15 @@
         },
         "responses": {
           "200": {
-            "$ref": "#/components/schemas/SucessResponse"
+            "content": {
+              "application/json": {
+                "example": {
+                  "postId": "643fbf400dd7aa756c651590",
+                  "body": "laudantium enim quasi est quidemdis et nam sapiente accusantium",
+                  "_id": "6482bcda3c581546d38bedc8"
+                }
+              }
+            }
           },
           "404": {
             "$ref": "#/components/schemas/NotFound"
@@ -233,7 +244,7 @@
         }
       }
     },
-    "posts/search": {
+    "/posts/search": {
       "get": {
         "summary": "Search posts by keyword",
         "tags": ["Posts"],
@@ -272,6 +283,9 @@
           },
           "401": {
             "$ref": "#/components/schemas/NotAuthorised"
+          },
+          "404": {
+            "$ref": "#/components/schemas/NotFound"
           }
         }
       }
@@ -314,7 +328,16 @@
         },
         "responses": {
           "200": {
-            "$ref": "#/components/schemas/SucessResponse"
+            "content": {
+              "application/json": {
+                "example": {
+                  "username": "bregt",
+                  "email": "sincere1@aril.biz",
+                  "password": "$2a$10$70o6PkhBDJEJnn53mQtSceQnqpXTnRi4qYWtrdZt9rP2aXqxcOlPy",
+                  "_id": "6482c3f31df2baa0e05ad047"
+                }
+              }
+            }
           },
           "400": {
             "$ref": "#/components/schemas/BadRequest"
@@ -335,6 +358,9 @@
           },
           "401": {
             "$ref": "#/components/schemas/NotAuthorised"
+          },
+          "404": {
+            "$ref": "#/components/schemas/NotFound"
           }
         }
       }
@@ -371,6 +397,9 @@
           },
           "401": {
             "$ref": "#/components/schemas/NotAuthorised"
+          },
+          "400": {
+            "$ref": "#/components/schemas/BadRequest"
           }
         }
       }
@@ -388,6 +417,22 @@
       }
     },
     "schemas": {
+      "NotFound": {
+        "description": "Not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Not found"
+                }
+              }
+            }
+          }
+        }
+      },
       "BadRequest": {
         "description": "Bad Request",
         "content": {
@@ -619,22 +664,6 @@
         "example": {
           "body": "laudantium enim quasi est quidemdis et nam sapiente accusantium",
           "postId": "643fbf400dd7aa756c651585"
-        }
-      },
-      "NotFound": {
-        "description": "Not found",
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "object",
-              "properties": {
-                "message": {
-                  "type": "string",
-                  "example": "Not found"
-                }
-              }
-            }
-          }
         }
       }
     }

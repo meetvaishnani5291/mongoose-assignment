@@ -7,7 +7,6 @@ const {
   postValidationSchema,
   commentValidationSchema,
 } = require("../utils/validation");
-const e = require("express");
 
 const fetchAllPosts = async (req, res, next) => {
   try {
@@ -125,7 +124,7 @@ const fetchPostById = async (req, res, next) => {
         },
       },
     ]);
-    if (!post) return res.status(404).json({ error: "post not found!" });
+    if (!post[0]) return res.status(404).json({ error: "post not found!" });
 
     res.status(200).json(post[0]);
   } catch (err) {
@@ -171,6 +170,9 @@ const searchPost = async (req, res, next) => {
         },
       },
     ]);
+    if (posts.length === 0)
+      return res.status(404).json({ message: "post not found" });
+
     res.status(200).json(posts);
   } catch (err) {
     if (err instanceof Joi.ValidationError)
@@ -207,7 +209,7 @@ const deletePost = async (req, res, next) => {
     });
     if (!post) return res.status(404).json({ error: "post not found!" });
     post.deleteOne();
-    res.status(200).json({ message: "post deleted successfully" });
+    res.status(200).json({ success: true });
   } catch (err) {
     if (err instanceof Joi.ValidationError)
       return res.status(400).json({ message: "please provide valid id" });
@@ -227,7 +229,7 @@ const addCommentToPost = async (req, res, next) => {
 
     const newComment = req.body;
     newComment.userId = req.user._id;
-    newComment.posId = post._id;
+    newComment.postId = post._id;
     Joi.assert({ ...newComment }, commentValidationSchema);
 
     const comment = await Comment.create(newComment);
