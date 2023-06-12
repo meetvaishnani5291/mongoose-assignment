@@ -5,7 +5,6 @@ require("dotenv").config();
 
 const userRoutes = require("../src/routes/user.route");
 const postRoutes = require("../src/routes/post.route");
-const e = require("express");
 const Joi = require("joi");
 
 const app = express();
