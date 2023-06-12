@@ -656,14 +656,10 @@
         "properties": {
           "body": {
             "type": "string"
-          },
-          "postId": {
-            "type": "string"
           }
         },
         "example": {
-          "body": "laudantium enim quasi est quidemdis et nam sapiente accusantium",
-          "postId": "643fbf400dd7aa756c651585"
+          "body": "laudantium enim quasi est quidemdis et nam sapiente accusantium"
         }
       }
     }
